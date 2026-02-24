@@ -1,3 +1,2 @@
 kagglehub
-matplotlib
-numpy
+os

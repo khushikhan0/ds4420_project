@@ -203,6 +203,7 @@ cython_debug/
 
 # Project-specific ignores
 # Data files
+data/
 data/raw/*
 data/processed/* .json
 !data/raw/.gitkeep
