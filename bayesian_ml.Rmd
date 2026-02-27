@@ -23,40 +23,74 @@ kgl_auth(username = "ellachee21", key = "KGAT_107e527829b7a3f5505e98b50142d7db")
 system("/Users/nutellachee/anaconda3/bin/kaggle datasets download -d abdelghaniaaba/wildfire-prediction-dataset --unzip -p ./data")
 ```
 
+
 ## Load data
+
 ```{r}
-
-folder_list <- list.files("data/valid/nowildfire")
-
-# Get file name
-file_name <- map("data/valid/nowildfire", 
+# Helper to load both classes (no wildfire/wildfire) for given folder
+load_data <- function(folder_name) {
+  
+  # Load list of images (no wildfire)
+  nowildfire <- paste0(folder_name, "/nowildfire/")
+  nowildfire_list <- map(nowildfire, 
                  function(x) paste0(x, list.files(x))
                  ) %>% 
   unlist()
-
-# first 6 file name
-head(file_name)
-
-length(file_name)
+  
+  # Load list of images (no wildfire)
+  wildfire <- paste0(folder_name, "/wildfire/")
+  wildfire_list <- map(wildfire, 
+                 function(x) paste0(x, list.files(x))
+                 ) %>% 
+  unlist()
+  
+  print(sprintf("%d images in no wildfire class", length(nowildfire_list)))
+  print(sprintf("%d images in wildfire class", length(wildfire_list)))
+  
+  return(list(nowildfire_list, wildfire_list))
+  
+}
 
 ```
-## Preview data
+
+Load validation, training, testing sets
 
 ```{r}
-install.packages("dylib")
-install.packages("imager")
-library(imager)
+# Load validation data
+print("VALIDATION:")
+valid_results <- load_data("data/valid")
+valid_nowildfire <- valid_results[[1]]
+valid_wildfire <- valid_results[[2]]
 
-# Randomly select image
-set.seed(99)
-random_img <- sample(file_name, 6)
+# Load training data
+print("TRAINING:")
+train_results <- load_data("data/train")
+train_nowildfire <- train_results[[1]]
+train_wildfire <- train_results[[2]]
 
-# Load image into R
-img <- map(random_img, load.image)
-
-# Plot image
-par(mfrow = c(2, 3)) # 2x3 image grid
-map(img, plot)
+# Load testing data
+print("TESTING:")
+test_results <- load_data("data/test")
+test_nowildfire <- test_results[[1]]
+test_wildfire <- test_results[[2]]
 
 
 ```
+
+## Preview image data
+
+```{r, echo=TRUE}
+# Randomly select image
+set.seed(99)
+random_img <- sample(test_wildfire, 1)
+
+# Load image into R
+img <- image_read(random_img)
+print(img)
+
+# Load image as array of values
+img_array <- as.numeric(image_data(img, channels = "rgb"))
+dim(img_array)
+
+```
+
