@@ -1,0 +1,62 @@
+---
+title: "Bayesian ML"
+author: "Ella Chee"
+date: "2026-02-27"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Bayesian Model for Wildfire Detection
+
+## Get data from Kaggle
+```{r, echo=TRUE}
+install.packages("remotes")
+library(kaggler)
+
+# Authenticate creds
+kgl_auth(username = "ellachee21", key = "KGAT_107e527829b7a3f5505e98b50142d7db")
+
+# Download a dataset
+system("/Users/nutellachee/anaconda3/bin/kaggle datasets download -d abdelghaniaaba/wildfire-prediction-dataset --unzip -p ./data")
+```
+
+## Load data
+```{r}
+
+folder_list <- list.files("data/valid/nowildfire")
+
+# Get file name
+file_name <- map("data/valid/nowildfire", 
+                 function(x) paste0(x, list.files(x))
+                 ) %>% 
+  unlist()
+
+# first 6 file name
+head(file_name)
+
+length(file_name)
+
+```
+## Preview data
+
+```{r}
+install.packages("dylib")
+install.packages("imager")
+library(imager)
+
+# Randomly select image
+set.seed(99)
+random_img <- sample(file_name, 6)
+
+# Load image into R
+img <- map(random_img, load.image)
+
+# Plot image
+par(mfrow = c(2, 3)) # 2x3 image grid
+map(img, plot)
+
+
+```
