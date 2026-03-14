@@ -1,2 +1,6 @@
 kagglehub
 os
+cv2
+Path
+Image
+numpy
