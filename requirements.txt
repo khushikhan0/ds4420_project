@@ -4,3 +4,6 @@ cv2
 Path
 Image
 numpy
+keras
+tensorflow
+pandas
