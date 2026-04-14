@@ -1,48 +1,9 @@
-import cv2
 from pathlib import Path
 from PIL import Image, ImageFile
 import numpy as np
 import matplotlib.pyplot as plt
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-
-def convert_to_grayscale(path: str) -> None:
-    '''
-    Converts an image(s) at the given path to grayscale.
-    '''
-    input_path = Path(path)
-
-    # Determines if path was a file path or folder path
-    if input_path.is_file():
-        files = [input_path]
-        output_dir = input_path.parent / (input_path.parent.name + "_grey")
-    elif input_path.is_dir():
-        files = [f for f in input_path.iterdir() if f.suffix.lower() == ".jpg"]
-        output_dir = input_path / (input_path.name + "_grey")
-    else:
-        print(f"Path not found: {path}")
-        return
-
-    # Don't make a directory if there are no files
-    if not files:
-        return
-    # Ensures the output directory exists
-    output_dir.mkdir(exist_ok=True)
-
-    # Iterates over every file and converts it to grayscale
-    for file in files:
-        image = cv2.imread(str(file))
-        if image is None:
-            print(f"File not found or cannot be read: {file}")
-            continue
-
-        gray_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        save_path = output_dir / file.name
-
-        # Save grayscale file to save path
-        cv2.imwrite(str(save_path), gray_img)
-
-    print(f"Grayscale images saved to: {output_dir}")
 
 def convert_to_matrix(image_path: str) -> np.array:
     im = Image.open(image_path)
