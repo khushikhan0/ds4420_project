@@ -17,7 +17,7 @@ def download_wildfire_data():
     print("Downloading the wildfire images from Kaggle")
 
     kaggle_handle = "abdelghaniaaba/wildfire-prediction-dataset"
-    path = kagglehub.dataset_download(handle=kaggle_handle, output_dir=DATA_DIR)
+    path = kagglehub.dataset_download(handle=kaggle_handle)
     
     print(f"Wildfire image dataset saved to {path}")
 
