@@ -4,6 +4,12 @@ import numpy as np
 
 from coordinate_utils import get_sample_coordinates
 
+"""
+instructions to run the website:
+make sure you're in the src directory
+streamlit run app.py
+"""
+
 st.title('Wildfire Whackers')
 
 st.write('Team Members: Ella Chee, Willbert Clement Christianto, Khushi Khan')
