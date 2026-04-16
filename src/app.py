@@ -1,56 +1,50 @@
 import streamlit as st
 import pandas as pd
+import pydeck as pdk
 import numpy as np
+import keras
 
+from PIL import Image
+from pathlib import Path
 from coordinate_utils import get_sample_coordinates
 
 """
 instructions to run the website:
-make sure you're in the src directory
-streamlit run app.py
+1. make sure you're in the src directory
+2. run this in terminal `streamlit run app.py`
 """
 
 st.title('Wildfire Whackers')
-
 st.write('Team Members: Ella Chee, Willbert Clement Christianto, Khushi Khan')
 
-tab1, tab2, tab3 = st.tabs(["About Us", "Model Performance", "Interact with data"])
+tab1, tab2, tab3 = st.tabs(["About Us", "Model Performance", "Interact With Data"])
 
 with tab1:
-    st.markdown('### Project Goal ###')
+    st.markdown('## Goal ##')
     st.write('Our project aims to detect the likelihood of wildfires using satellite wildfire imagery. We\'ve sampled nine images from our training dataset\
             below.')
 
     st.image('./website-visuals/dataset_samples.png')
 
-    st.markdown('### Methodology ###')
-    st.write('Our project implements MLP (Multi-layer Perceptron), CNN (Convolutional Neural Network) and Bayesian models to accomplish this classification task. \
+    st.markdown('## Methodology ##')
+    st.write('Our project implements MLP (Multi-layer Perceptron), CNN (Convolutional Neural Network) and Bayesian models to accomplish this binary classification task. \
             CNN and Bayesian modeling are an extension of the capabilities of the MLP model, as they introduce uncertainty quantification into the classification \
             task, complementing the deterministic MLP approach.')
 
     st.markdown('#### :gray[MLP Architecture] ####')
-    st.write('The MLP model maps an input vector (flattened image pixels) through a hidden layer (ReLU), and generates an output probability (Sigmoid). \
-                The model is trained using binary cross-entropy loss and optimized with the help of gradient descent. This framework uses existing class resources, \
-                but carries out several adjustments designed to handle high-dimensional image data more efficiently. First of all, mini-batch gradient descent was \
-                used instead of full-batch updates to improve computational stability. The initialization technique was applied to the weights to prevent exploding \
-                gradients with ReLU activations, and input features were normalized using z-scoring to ensure consistent scaling. Last but not least, the \
-                implementation uses vectorized operations to clip sigmoid inputs to maintain numerical stability. These deviations extend the basic MLP framework \
-                from class to better suit large-scale image classification tasks like this.')
+    st.write('The MLP is implemented manually in Python. The model maps an input vector (flattened image pixels) through a hidden layer (ReLU), and generates an output probability (Sigmoid). It’s trained using binary cross-entropy loss and optimized by gradient descent. This framework uses existing class resources, but carries out several adjustments to handle high-dimensional image data more efficiently. First, mini-batch gradient descent was used instead of full-batch updates to improve computational stability. The initialization technique was applied to the weights to prevent exploding gradients with ReLU activations, and input features were normalized using z-scoring to ensure consistent scaling. Lastly, vectorized operations are used to clip sigmoid inputs for numerical stability. These deviations extend the basic MLP framework from class to better suit large-scale image classification. ')
 
     st.markdown('#### :gray[CNN Architecture] ####')
-    st.write('The model passes normalized data through a convolutional layer that outputs 16 channels, then applies max pooling. The second convolutional layer \
-            applies a Sigmoid activation function to the first pooled layer, outputting 32 channels. Max pooling is applied once more on the output of the second \
-            convolutional layer. Each convolutional and pool layer utilizes a (3, 3) kernel with a stride of 1. Then, the pooled layer is flattened and passed \
-            through a hidden layer that applies a ReLU activation function. The dimensionality of the output space is 250 units. Finally, an output layer is \
-            defined with a Sigmoid activation function and an output space of 1 unit. The model outputs either a 0 (not at risk of a wildfire) or a 1 (at risk \
-            of a wildfire), which is why only 1 unit is needed for this layer. The model is trained using a Stochastic Gradient Descent optimizer, which trains \
-            in small batches of 32 images over 50 epochs. This optimizer was chosen to account for the large dataset size. Finally, binary cross-entropy is used \
-            to calculate loss, as this task has a binary outcome.')
+    st.image('./cnn/cnn_architecture.png')
+    st.write('The CNN is implemented using Keras and Tensorflow in Python. The model passes normalized data through a convolutional layer that applies ReLU, outputs 16 channels, then max pools the result with a (2,2) kernel. The second convolutional layer applies a ReLU function to the first pooled layer, outputting 32 channels. Max pooling is applied once more on the output of the second convolutional layer with a (2,2) kernel size. Each convolutional layer utilizes a (3,3) kernel with a stride of 1. Then, the pooled layer is flattened and passed through a hidden layer that applies ReLU, outputting 64 units. Finally, an output layer is defined with a Sigmoid activation function and an output space of 1 unit. The model is trained using an Adam (Adaptive Moment Estimation) optimizer, which trains in small batches of 32 images over 10 epochs. This optimizer is efficient on large datasets and adjusts learning rates dynamically during training. Finally, binary cross-entropy is used to calculate loss, as this task has a binary outcome. ')
 
     st.markdown('#### :gray[Bayesian Architecture] ####')
-    st.write('The model ...')
+    st.write('The Bayesian logistic regression model is designed with brms in R, establishing a default prior with a Bernoulli distribution, and Bernoulli posterior, \
+             as is standard for binary classification. 350x350 pixel images were resized to 35x35, RGB values were collapsed into a single value per pixel, and finally \
+             flattened into a single vector such that each pixel represents an input feature (resulting in 1225 total features). Training was set up with four chains, \
+             1000 iterations, and 180 burn-in iterations (18% of the initial samples).')
 
-    st.markdown('### Data Collection ###')
+    st.markdown('## Data Collection ##')
     st.write('The dataset is sourced from the Wildfire Prediction Dataset (Satellite Images) on \
             [Kaggle](https://www.kaggle.com/datasets/abdelghaniaaba/wildfire-prediction-dataset/data), which contains 350x250 pixel satellite images of \
             Canadian wildfire-affected and non-affected regions. The dataset was split into train, test, and validation sets, with each set containing \
@@ -72,18 +66,18 @@ with tab2:
     st.markdown('#### MLP Performance ####')
     st.write('The MLP achieved stronger-than-anticipated results on the predicting wildfire presence. With a test accuracy >80% and balanced performance \
             across both classes.')
-    st.markdown("""
-        ```bash
-                            Classification Report:
-                        precision    recall  f1-score   support
 
-                    0.0       0.88      0.90      0.89      3480
-                    1.0       0.87      0.85      0.86      2820
+    classification_report = pd.DataFrame(
+        {
+            "Precision": [0.88, 0.87, None, 0.88, 0.88],
+            "Recall": [0.90, 0.85, None, 0.87, 0.88],
+            "f1-score": [0.89, 0.86, 0.88, 0.87, 0.88],
+            "Support": [3480, 2820, 6300, 6300, 6300],
+        },
+        index=["0.0", "1.0", "Accuracy", "Macro Avg", "Weighted Avg"],
+    )
 
-                accuracy                           0.88      6300
-            macro avg       0.88      0.87      0.87      6300
-            weighted avg       0.88      0.88      0.88      6300
-    """)
+    st.table(classification_report)
     st.write('As seen in the classification report, the model has an F1-score of 0.89 for wildfire and 0.86 for no wildfire, indicating that \
             it is better at identifying wildfire-affected regions but the difference is immaterial to the scope/context of this project. Precision and recall \
             values are also closely aligned, delineating that there are no major biases toward false positives of false negatives.')
@@ -99,35 +93,101 @@ with tab2:
              a batch size of 32, the model\'s loss and accuracy converged to the following on the training and validation datasets:')
     st.image('./cnn/loss_plot_cnn.png')
     st.image('./cnn/accuracy_plot_cnn.png')
-    st.write('The plots indicate that the model is learning the data well. This is especially shown in the Loss plot, as the loss on the validation set\
-             converges between 0.10 and 0.15. Additionally, the validation accuracy is high, oscillating between 95-97%.')
+    st.write('The plots indicate that the model is learning the data well. This is especially shown in the Loss plot, as the loss on the validation set \
+             converges to approximately 0.3. Additionally, the validation accuracy is high, oscillating between 88-94%.')
     st.markdown('\nThe model\'s performance was evaluated further using the test dataset.')
     st.image('./cnn/confusion_matrix_cnn.png')
-    st.write('The CNN effectively captured spatial patterns in the wildfire images. As shown by the confusion matrix, the model rarely predicted false \
-             negatives and false positives. The model achieved an accuracy, precision, and F1 score of 97%, as well as a recall of 96% on the test dataset. \
-             The high precision indicates that the model is predicting wildfires accurately, while the high recall underlines that the model rarely labels \
-             images at risk of a wildfire as non-wildfire photos. Obtaining a high recall score is especially valuable in wildfire detection, as false negatives \
-             can have a detrimental impact to human life and the environment. Ideally, the number of false negatives would be lower than the number of false positives. \
-             The F1 score further demonstrates a good balance between precision and recall, suggesting robust overall performance. ')
+    st.write('The CNN effectively captured spatial patterns in the satellite images. As shown by the confusion matrix, the model rarely predicted false negatives \
+             and false positives. The model achieved an accuracy, precision, F1 score, and recall of approximately 95% on the test dataset. The high precision \
+             indicates that the model is predicting wildfires accurately, while the high recall underlines that the model rarely labels images at risk of a wildfire \
+             as the latter class. Obtaining a high recall score is especially valuable in wildfire detection, as false negatives can have a detrimental impact to human \
+             life and the environment. The number of false negatives is lower than the number of false positives, which aligns well with this scenario. The F1 score \
+             further demonstrates a good balance between precision and recall, suggesting robust overall performance. ')
     
     st.markdown('#### Bayesian Performance ####')
-    st.write('...')
+    st.write('The Bayesian logistic regression failed to meaningfully represent the distinction between areas satellite images of areas with and without risk of wildfire.\
+             ')
 
 with tab3:
-    n_samples = 1000
+    n_samples = 5000
     wildfire_lats, wildfire_longs = get_sample_coordinates(n_samples=n_samples)
     nowildfire_lats, nowildfire_longs = get_sample_coordinates(n_samples=n_samples, 
                                                                get_wildfire_set=False)
-    dataset = np.ones(n_samples).tolist() + np.zeros(n_samples).tolist()
 
-    st.markdown(f'### Locations of {n_samples} dataset training wildfire images ###')
+    st.markdown(f"### {n_samples} Image Samples from the Training Dataset")
+
     data = pd.DataFrame({
         'latitude': wildfire_lats + nowildfire_lats,
         'longitude': wildfire_longs + nowildfire_longs,
-        'dataset': dataset,
-        # 'color': ['red', 'green']
+        'label': ['wildfire'] * n_samples + ['no_wildfire'] * n_samples
     })
 
-    st.map(data)
+    data['color'] = data['label'].map({
+        'wildfire': [255, 0, 0], 
+        'no_wildfire': [0, 255, 0]
+    })
 
-    # TODO: Figure out how to make points on map clickable
+    layer = pdk.Layer(
+        "ScatterplotLayer",
+        data=data,
+        get_position='[longitude, latitude]',
+        get_color='color',
+        get_radius=500,
+        pickable=True,
+    )
+
+    view_state = pdk.ViewState(
+        latitude=data['latitude'].mean(),
+        longitude=data['longitude'].mean(),
+        zoom=4,
+    )
+
+    st.pydeck_chart(pdk.Deck(
+        layers=[layer],
+        initial_view_state=view_state
+    ))
+
+    st.write('The red plot points indicate areas at risk of a wildfire. Green plot points are not at risk.')
+
+    st.markdown("### Upload an image to test if a wildfire is likely: ###")
+
+    uploaded_files = st.file_uploader(
+        "Choose a file", accept_multiple_files=True
+    )
+
+    if uploaded_files:
+        model = keras.models.load_model('./cnn/cnn_model.keras')
+
+        images = []
+        coords = []
+        for file in uploaded_files:
+            coordinates = Path(file.name).stem.split(',')
+
+            img = Image.open(file).convert("RGB")
+            img = img.resize((256, 256))
+
+            img_array = np.array(img)
+
+            print(coordinates)
+
+            images.append(img_array)
+            coords.append((coordinates[0], coordinates[1]))
+
+        images = np.array(images)
+
+        preds = model.predict(images)
+
+        print(preds)
+
+        predicted_labels = (preds > 0.5).astype(int)
+
+        for i, (label, img) in enumerate(zip(predicted_labels, images)):
+            print(
+                i,
+                np.mean(img),
+                np.std(img),
+                img.shape
+            )
+
+            st.image(img, caption=f"({coordinates[0]}, {coordinates[1]})", width="content")
+            st.write(f"Image {i + 1}: {'Wildfire Risk' if label == 1 else 'No Wildfire'}")

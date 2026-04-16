@@ -29,5 +29,25 @@ def get_sample_coordinates(n_samples=100, get_wildfire_set=True):
 
     return latitudes[:sample_size], longitudes[:sample_size]
 
+def get_image_dict(get_wildfire_set=True):
+    images = {}
+
+    if get_wildfire_set:
+        dataset_root = Path("../data/raw/train/wildfire")
+    else:
+        dataset_root = Path("../data/raw/train/nowildfire")
+
+    all_files = list(Path(dataset_root).rglob("*.jpg")) + \
+                list(Path(dataset_root).rglob("*.jpeg")) + \
+                list(Path(dataset_root).rglob("*.png"))
+
+    for path in all_files:
+        file_path = Path(path)
+        coordinates = file_path.stem
+        images[coordinates] = path
+    
+    return images
+        
+
 if __name__ == "__main__":
     pass
