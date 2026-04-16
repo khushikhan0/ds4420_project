@@ -15,6 +15,14 @@ st.write('Team Members: Ella Chee, Willbert Clement Christianto, Khushi Khan')
 
 tab1, tab2, tab3, tab4 = st.tabs(["About Us", "Model Performance", "Interact With Data", "View Our Poster"])
 
+@st.cache_resource
+def load_cnn():
+    return keras.models.load_model('src/cnn/cnn_model.keras')
+
+@st.cache_resource
+def load_mlp():
+    return load_model('src/mlp/mlp_weights.npz')
+
 with tab1:
     st.markdown('## Goal ##')
     st.write('Our project aims to detect the likelihood of wildfires using satellite wildfire imagery. We\'ve sampled nine images from our training dataset\
@@ -155,8 +163,8 @@ with tab3:
 
     if uploaded_files:
         # Load models
-        cnn_model = keras.models.load_model('src/cnn/cnn_model.keras')
-        mlp_model = load_model('src/mlp/mlp_weights.npz')
+        cnn_model = load_cnn()
+        mlp_model = load_mlp()
 
         # Gather image and filename information
         images = []
