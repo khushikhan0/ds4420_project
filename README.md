@@ -9,6 +9,8 @@ We experimented with three types of deep learning approaches (multi-layer percep
   <img src="./src/website-visuals/dataset_6samples.png" width="600" height="600" alt="Description">
 </div>
 
+Visit our website for more details:
+
 ### Usage: 
 1. Clone and navigate to the repository.
 ```bash
@@ -23,17 +25,8 @@ pip install -r requirements.txt
 ```bash
 download_data.py
 ```
-3. Load each of the models with the following lines:
+3. Load the CNN model with the following line:
 - CNN:
 ```bash
 model = keras.models.load_model('./cnn/cnn_model.keras')
 ```
-- MLP:
-```bash
-model = ...
-```
-- Bayesian LR:
-```bash
-model = ...
-```
-4. Visit our website for more details!
