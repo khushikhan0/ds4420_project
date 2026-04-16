@@ -1,5 +1,5 @@
 ---
-title: "Bayesian ML"
+title: "Bayesian Logistic Regression"
 author: "Ella Chee"
 date: "2026-02-27"
 output: pdf_document
@@ -9,40 +9,31 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Bayesian Model for Wildfire Detection
+# Bayesian Model for Wildfire Detection
 
 ## Get data from Kaggle
 ```{r, echo=TRUE}
-install.packages("remotes")
 library(kaggler)
 
 # Authenticate creds
-kgl_auth(username = "ellachee21", key = "KGAT_107e527829b7a3f5505e98b50142d7db")
+#kgl_auth(username = "ellachee21", key = "KGAT_107e527829b7a3f5505e98b50142d7db")
 
 # Download a dataset
-system("/Users/nutellachee/anaconda3/bin/kaggle datasets download -d abdelghaniaaba/wildfire-prediction-dataset --unzip -p ./data")
+# system("/Users/nutellachee/anaconda3/bin/kaggle datasets download -d abdelghaniaaba/wildfire-prediction-dataset --unzip -p ./data")
 ```
 
 
 ## Load data
 
 ```{r}
+library(dplyr)
+library(tidyverse)
+
 # Helper to load both classes (no wildfire/wildfire) for given folder
 load_data <- function(folder_name) {
-  
-  # Load list of images (no wildfire)
-  nowildfire <- paste0(folder_name, "/nowildfire/")
-  nowildfire_list <- map(nowildfire, 
-                 function(x) paste0(x, list.files(x))
-                 ) %>% 
-  unlist()
-  
-  # Load list of images (no wildfire)
-  wildfire <- paste0(folder_name, "/wildfire/")
-  wildfire_list <- map(wildfire, 
-                 function(x) paste0(x, list.files(x))
-                 ) %>% 
-  unlist()
+
+  nowildfire_list <- list.files(paste0("data/", folder_name, "/nowildfire"), full.names = TRUE)
+  wildfire_list <- list.files(paste0("data/", folder_name, "/wildfire"), full.names = TRUE)
   
   print(sprintf("%d images in no wildfire class", length(nowildfire_list)))
   print(sprintf("%d images in wildfire class", length(wildfire_list)))
@@ -58,19 +49,19 @@ Load validation, training, testing sets
 ```{r}
 # Load validation data
 print("VALIDATION:")
-valid_results <- load_data("data/valid")
+valid_results <- load_data("valid")
 valid_nowildfire <- valid_results[[1]]
 valid_wildfire <- valid_results[[2]]
 
 # Load training data
 print("TRAINING:")
-train_results <- load_data("data/train")
+train_results <- load_data("train")
 train_nowildfire <- train_results[[1]]
 train_wildfire <- train_results[[2]]
 
 # Load testing data
 print("TESTING:")
-test_results <- load_data("data/test")
+test_results <- load_data("test")
 test_nowildfire <- test_results[[1]]
 test_wildfire <- test_results[[2]]
 
@@ -80,8 +71,10 @@ test_wildfire <- test_results[[2]]
 ## Preview image data
 
 ```{r, echo=TRUE}
+library(magick)
+
 # Randomly select image
-set.seed(99)
+set.seed(42)
 random_img <- sample(test_wildfire, 1)
 
 # Load image into R
@@ -93,4 +86,192 @@ img_array <- as.numeric(image_data(img, channels = "rgb"))
 dim(img_array)
 
 ```
+## Data preparation
 
+```{r}
+library(magick)
+library(dplyr)
+
+# Using each pixel as a separate feature
+load_images_to_df <- function(image_paths, label, batch_size = 500, resize = 35) {
+  
+  # Batch to increase efficiency
+  batches <- split(image_paths, ceiling(seq_along(image_paths) / batch_size))
+  results <- lapply(batches, function(batch) {
+    
+    imgs <- tryCatch(
+      image_read(batch) |>
+        image_resize(paste0(resize, "x", resize, "!")),
+      error = function(e) { message("Batch error: ", e$message); NULL }
+    )
+    if (is.null(imgs)) return(NULL)
+    
+    n <- length(batch)
+    p <- resize * resize
+    
+    # Pre-allocate matrix
+    X <- matrix(NA_real_, nrow = n, ncol = p)
+    
+    for (i in seq_len(n)) {
+      arr <- image_data(imgs[i], channels = "rgb") # [channel, x, y]
+      
+      R <- as.integer(arr[1,,]) # Extract separate channels
+      G <- as.integer(arr[2,,])
+      B <- as.integer(arr[3,,])
+      
+      pixel_vals <- R * 256^2 + G * 256 + B # Combine into single value per pixel
+      X[i, ] <- as.numeric(pixel_vals) # Flatten to vector
+    }
+    image_destroy(imgs)
+    
+    # Convert to dataframe
+    df <- as.data.frame(X)
+    colnames(df) <- paste0("px_", seq_len(p))
+    #df$name <- batch
+    df$label <- label
+    df
+  })
+  bind_rows(results)
+}
+
+# Load each dataset
+dfs <- list()
+
+for (name in c("train", "valid", "test")) {
+  nowildfire_df <- load_images_to_df(get(paste0(name, "_nowildfire")), 0, 500, 16)
+  wildfire_df <- load_images_to_df(get(paste0(name, "_wildfire")), 1, 500, 16)
+  
+  # Combine and shuffle
+  df <- bind_rows(nowildfire_df, wildfire_df)
+  set.seed(42)
+  shuffled_df <- df[sample(1:nrow(df)), ]
+  
+  dfs[[name]] <- shuffled_df
+  print(sprintf("Loaded %s dataset", name))
+}
+
+# Apply to each dataset
+train_df <- dfs[["train"]]
+valid_df <- dfs[["valid"]]
+test_df <- dfs[["test"]]
+
+```
+
+
+## Model set-up
+
+1. Resized 350x350px to 35x35px --> flattened to 1225 px values = 1225 features,
+with chains = 4, 
+iter = 20, 
+warmup = 3, 
+68 divergent chains after warmup, 
+largest R-hat is Inf, indicating chains have not mixed, 
+vector memory limit of 24.0 GB reached
+
+2. Resized to 16x16 px --> flattened to 256 px values = 256 features, 
+with chains = 4, 
+iter = 100, 
+warmup = 18, 
+327 divergent transitions after warmup,
+largest R-hat is 30.33, indicating chains have not mixed
+vector memory limit of 24.0 Gb reached, see mem.maxVSize()
+
+3. Resized to 16x16 px --> flattened to 256 px values = 256 features, 
+with chains = 4, 
+iter = 500, 
+warmup = 90, 
+616 divergent transitions after warmup,
+largest R-hat is R-hat is 7.38, indicating chains have not mixed
+vector memory limit of 24.0 Gb reached, see mem.maxVSize()
+
+4. Resized to 16x16 px --> flattened to 256 px values = 256 features, 
+with chains = 4, 
+iter = 1000, 
+warmup = 180, 
+199 divergent transitions after warmup,
+largest R-hat is R-hat is 4.75, indicating chains have not mixed
+
+4. Resized to 16x16 px --> flattened to 256 px values = 256 features, 
+with chains = 6, 
+iter = 10000, 
+warmup = 1800, 
+2540 divergent transitions after warmup,
+largest R-hat is R-hat is 5.48, indicating chains have not mixed
+
+```{r}
+library(brms)
+
+# Set default prior (use Bernoulli for binary classification)
+default_prior <- default_prior(label ~ .,
+              data = train_df,
+              family = bernoulli("logit"))
+
+# Creating Bayesian logistic regression model, use all pixels as features
+brm_logit <- brm(label ~ .,
+                family = bernoulli("logit"),
+                data = train_df,
+                chains = 6,
+                iter = 10000,
+                warmup = 1800,
+                prior = default_prior)
+
+# Get summary stats on posterior
+summary(brm_logit)
+
+post_draws <- as.data.frame(brm_logit)
+```
+
+
+## Model validation
+
+```{r}
+library(caret)
+
+# Check posterior predictive fit
+pp_check(brm_logit)
+
+# Plot individual features
+plot(brm_logit, variable = c("b_px_1", "b_px_128", "b_px_256"))
+
+# Evaluate on validation set
+pred_probs <- posterior_epred(brm_logit, newdata = valid_df)
+pred_label <- as.numeric(colMeans(pred_probs) > 0.5)
+
+# Confusion matrix
+confusionMatrix(factor(pred_label, levels=c(1,0)), 
+                factor(valid_df$label, levels=c(1,0)), 
+                mode = "everything")
+
+```
+
+
+## Model testing
+```{r}
+# Evaluate on test set
+pred_probs <- posterior_epred(brm_logit, newdata = test_df)
+pred_label <- as.numeric(colMeans(pred_probs) > 0.5)
+
+# Confusion matrix, get F1, precision, recall
+test_conf_matrix <- confusionMatrix(factor(pred_label, levels=c(1,0)), 
+                factor(test_df$label, levels=c(1,0)), 
+                mode = "everything")
+test_conf_matrix
+
+# Get per-class accuracies
+test_conf_mat_2 <- table(Predicted = pred_label, Actual = test_df$label)
+true_positives <- diag(test_conf_mat_2) # TP
+actual_counts <- colSums(test_conf_mat_2) # Total per class
+per_class_accuracy <- true_positives / actual_counts # Per-class acc
+print(per_class_accuracy)
+
+# Generate confusion matrix figure
+library(ggplot2)
+plt <- as.data.frame(test_conf_matrix$table)
+ggplot(plt, aes(Prediction, Reference, fill = Freq)) +
+  geom_tile() + 
+  geom_text(aes(label = Freq)) +
+  scale_fill_gradient(low = "steelblue", high = "white") +
+  ggtitle("Bayesian LR Confusion Matrix") +
+  theme_minimal()
+
+```
