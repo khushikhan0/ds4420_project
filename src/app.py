@@ -63,9 +63,9 @@ with tab2:
 
     classification_report = pd.DataFrame(
         {
-            "Precision": [0.88, 0.87, None, 0.88, 0.88],
-            "Recall": [0.90, 0.85, None, 0.87, 0.88],
-            "f1-score": [0.89, 0.86, 0.88, 0.87, 0.88],
+            "Precision": [0.91, 0.89, None, 0.90, 0.90],
+            "Recall": [0.91, 0.89, None, 0.90, 0.90],
+            "f1-score": [0.91, 0.89, 0.90, 0.90, 0.90],
             "Support": [3480, 2820, 6300, 6300, 6300],
         },
         index=["0.0", "1.0", "Accuracy", "Macro Avg", "Weighted Avg"],
@@ -100,6 +100,8 @@ with tab2:
     
     st.markdown('#### Bayesian Performance ####')
     st.image('./bayesian/brms_plot.png')
+    st.image('./bayesian/bayes_conf_matrix.png')
+    st.image('./bayesian/ppcheck.png')
     st.write('The Bayesian logistic regression failed to meaningfully represent the distinction between satellite images of areas with and without risk of wildfire. Decreasing the image size while increasing the number of iterations had some improvement, though various combinations of hyperparameters failed to reduce the r-hat to 1.00. In the final model, there were 2540 divergent transitions after warmup, with the largest r-hat being 5.48, indicated poor mixing of chains. As shown in the plots from a sample of features below, posterior distributions fail to adequately represent the Bernoulli , and in rather than displaying random, hairy caterpillar-like chains across iterations, there seems to be little to no mixing.')
 
 with tab3:
@@ -153,28 +155,26 @@ with tab3:
         model = keras.models.load_model('./cnn/cnn_model.keras')
 
         images = []
-        coords = []
+        descriptions = []
         for file in uploaded_files:
-            coordinates = Path(file.name).stem.split(',')
+            split_file_name = Path(file.name).stem.split(',')
 
             img = Image.open(file).convert("RGB")
             img = img.resize((256, 256))
 
             img_array = np.array(img)
 
-            print(coordinates)
-
             images.append(img_array)
-            coords.append((coordinates[0], coordinates[1]))
+
+            if len(split_file_name) == 2:
+                descriptions.append((split_file_name[0], split_file_name[1]))
+            else:
+                descriptions.append(split_file_name)
+
 
         images = np.array(images)
-
         preds = model.predict(images)
-
-        print(preds)
-
         predicted_labels = (preds > 0.5).astype(int)
-
         for i, (label, img) in enumerate(zip(predicted_labels, images)):
             print(
                 i,
