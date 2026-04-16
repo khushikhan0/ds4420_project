@@ -8,12 +8,6 @@ from PIL import Image
 from pathlib import Path
 from coordinate_utils import get_sample_coordinates
 
-"""
-instructions to run the website:
-1. make sure you're in the src directory
-2. run this in terminal `streamlit run app.py`
-"""
-
 st.title('Wildfire Whackers')
 st.write('Team Members: Ella Chee, Willbert Clement Christianto, Khushi Khan')
 
@@ -105,8 +99,8 @@ with tab2:
              further demonstrates a good balance between precision and recall, suggesting robust overall performance. ')
     
     st.markdown('#### Bayesian Performance ####')
-    st.write('The Bayesian logistic regression failed to meaningfully represent the distinction between areas satellite images of areas with and without risk of wildfire.\
-             ')
+    st.image('./bayesian/brms_plot.png')
+    st.write('The Bayesian logistic regression failed to meaningfully represent the distinction between satellite images of areas with and without risk of wildfire. Decreasing the image size while increasing the number of iterations had some improvement, though various combinations of hyperparameters failed to reduce the r-hat to 1.00. In the final model, there were 2540 divergent transitions after warmup, with the largest r-hat being 5.48, indicated poor mixing of chains. As shown in the plots from a sample of features below, posterior distributions fail to adequately represent the Bernoulli , and in rather than displaying random, hairy caterpillar-like chains across iterations, there seems to be little to no mixing.')
 
 with tab3:
     n_samples = 5000
