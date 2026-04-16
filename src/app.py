@@ -155,9 +155,9 @@ with tab3:
         model = keras.models.load_model('./cnn/cnn_model.keras')
 
         images = []
-        descriptions = []
+        filenames = []
         for file in uploaded_files:
-            split_file_name = Path(file.name).stem.split(',')
+            split_file_name = Path(file.name).stem
 
             img = Image.open(file).convert("RGB")
             img = img.resize((256, 256))
@@ -165,17 +165,12 @@ with tab3:
             img_array = np.array(img)
 
             images.append(img_array)
-
-            if len(split_file_name) == 2:
-                descriptions.append((split_file_name[0], split_file_name[1]))
-            else:
-                descriptions.append(split_file_name)
-
+            filenames.append(split_file_name)
 
         images = np.array(images)
         preds = model.predict(images)
         predicted_labels = (preds > 0.5).astype(int)
-        for i, (label, img) in enumerate(zip(predicted_labels, images)):
+        for i, (label, img, filename) in enumerate(zip(predicted_labels, images, filenames)):
             print(
                 i,
                 np.mean(img),
@@ -183,5 +178,11 @@ with tab3:
                 img.shape
             )
 
-            st.image(img, caption=f"({coordinates[0]}, {coordinates[1]})", width="content")
+            split_name = filename.split(',')
+
+            if len(split_name) == 2:
+                caption=f"({split_name[0]}, {split_name[1]})"
+            else:
+                caption=filename
+            st.image(img, caption=caption, width="content")
             st.write(f"Image {i + 1}: {'Wildfire Risk' if label == 1 else 'No Wildfire'}")
