@@ -7,7 +7,7 @@ import base64
 
 from PIL import Image
 from pathlib import Path
-from coordinate_utils import get_sample_coordinates
+from src.coordinate_utils import get_sample_coordinates
 
 st.title('Wildfire Whackers')
 st.write('Team Members: Ella Chee, Willbert Clement Christianto, Khushi Khan')
@@ -19,7 +19,7 @@ with tab1:
     st.write('Our project aims to detect the likelihood of wildfires using satellite wildfire imagery. We\'ve sampled nine images from our training dataset\
             below.')
 
-    st.image('./website-visuals/dataset_samples.png')
+    st.image('src/website-visuals/dataset_samples.png')
 
     st.markdown('## Methodology ##')
     st.write('Our project implements MLP (Multi-layer Perceptron), CNN (Convolutional Neural Network) and Bayesian models to accomplish this binary classification task. \
@@ -30,7 +30,7 @@ with tab1:
     st.write('The MLP is implemented manually in Python. The model maps an input vector (flattened image pixels) through a hidden layer (ReLU), and generates an output probability (Sigmoid). It’s trained using binary cross-entropy loss and optimized by gradient descent. This framework uses existing class resources, but carries out several adjustments to handle high-dimensional image data more efficiently. First, mini-batch gradient descent was used instead of full-batch updates to improve computational stability. The initialization technique was applied to the weights to prevent exploding gradients with ReLU activations, and input features were normalized using z-scoring to ensure consistent scaling. Lastly, vectorized operations are used to clip sigmoid inputs for numerical stability. These deviations extend the basic MLP framework from class to better suit large-scale image classification. ')
 
     st.markdown('#### :gray[CNN Architecture] ####')
-    st.image('./cnn/cnn_architecture.png')
+    st.image('src/cnn/cnn_architecture.png')
     st.write('The CNN is implemented using Keras and Tensorflow in Python. The model passes normalized data through a convolutional layer that applies ReLU, outputs 16 channels, then max pools the result with a (2,2) kernel. The second convolutional layer applies a ReLU function to the first pooled layer, outputting 32 channels. Max pooling is applied once more on the output of the second convolutional layer with a (2,2) kernel size. Each convolutional layer utilizes a (3,3) kernel with a stride of 1. Then, the pooled layer is flattened and passed through a hidden layer that applies ReLU, outputting 64 units. Finally, an output layer is defined with a Sigmoid activation function and an output space of 1 unit. The model is trained using an Adam (Adaptive Moment Estimation) optimizer, which trains in small batches of 32 images over 10 epochs. This optimizer is efficient on large datasets and adjusts learning rates dynamically during training. Finally, binary cross-entropy is used to calculate loss, as this task has a binary outcome. ')
 
     st.markdown('#### :gray[Bayesian Architecture] ####')
@@ -76,7 +76,7 @@ with tab2:
     st.write('As seen in the classification report, the model has an F1-score of 0.89 for wildfire and 0.86 for no wildfire, indicating that \
             it is better at identifying wildfire-affected regions but the difference is immaterial to the scope/context of this project. Precision and recall \
             values are also closely aligned, delineating that there are no major biases toward false positives of false negatives.')
-    st.image('./mlp/confusion_matrix_mlp.png')
+    st.image('src/mlp/confusion_matrix_mlp.png')
     st.write('The following confusion matrix further supports our thesis: a majority of predictions fall along an accurate prediction with relatively few misclassifications \' \
             between wildfire and non-wildfire classes. This indicates that the model is able to distinguish visual patterns associated with wildfire presence despite being trained on \' \
             flattened image inputs. The mini-batch gradient descent and normalization techniques also support optimization stability that minimize overfitting. \
@@ -86,12 +86,12 @@ with tab2:
     st.markdown('#### CNN Performance ####')
     st.write('The CNN was trained using Stochastic gradient descent. A binary cross entropy loss function was used. After 50 epochs of training with \
              a batch size of 32, the model\'s loss and accuracy converged to the following on the training and validation datasets:')
-    st.image('./cnn/loss_plot_cnn.png')
-    st.image('./cnn/accuracy_plot_cnn.png')
+    st.image('src/cnn/loss_plot_cnn.png')
+    st.image('src/cnn/accuracy_plot_cnn.png')
     st.write('The plots indicate that the model is learning the data well. This is especially shown in the Loss plot, as the loss on the validation set \
              converges to approximately 0.3. Additionally, the validation accuracy is high, oscillating between 88-94%.')
     st.markdown('\nThe model\'s performance was evaluated further using the test dataset.')
-    st.image('./cnn/confusion_matrix_cnn.png')
+    st.image('src/cnn/confusion_matrix_cnn.png')
     st.write('The CNN effectively captured spatial patterns in the satellite images. As shown by the confusion matrix, the model rarely predicted false negatives \
              and false positives. The model achieved an accuracy, precision, F1 score, and recall of approximately 95% on the test dataset. The high precision \
              indicates that the model is predicting wildfires accurately, while the high recall underlines that the model rarely labels images at risk of a wildfire \
@@ -100,9 +100,9 @@ with tab2:
              further demonstrates a good balance between precision and recall, suggesting robust overall performance. ')
     
     st.markdown('#### Bayesian Performance ####')
-    st.image('./bayesian/brms_plot.png')
-    st.image('./bayesian/bayes_conf_matrix.png')
-    st.image('./bayesian/ppcheck.png')
+    st.image('src/bayesian/brms_plot.png')
+    st.image('src/bayesian/bayes_conf_matrix.png')
+    st.image('src/bayesian/ppcheck.png')
     st.write('The Bayesian logistic regression failed to meaningfully represent the distinction between satellite images of areas with and without risk of wildfire. Decreasing the image size while increasing the number of iterations had some improvement, though various combinations of hyperparameters failed to reduce the r-hat to 1.00. In the final model, there were 2540 divergent transitions after warmup, with the largest r-hat being 5.48, indicated poor mixing of chains. As shown in the plots from a sample of features below, posterior distributions fail to adequately represent the Bernoulli , and in rather than displaying random, hairy caterpillar-like chains across iterations, there seems to be little to no mixing.')
 
 with tab3:
@@ -153,7 +153,7 @@ with tab3:
     )
 
     if uploaded_files:
-        model = keras.models.load_model('./cnn/cnn_model.keras')
+        model = keras.models.load_model('src/cnn/cnn_model.keras')
 
         images = []
         filenames = []
@@ -189,7 +189,7 @@ with tab3:
             st.write(f"Image {i + 1}: {'Wildfire Risk' if label == 1 else 'No Wildfire'}")
 
 with tab4:
-    with open("../DS4420_poster_final.pdf", "rb") as f:
+    with open("DS4420_poster_final.pdf", "rb") as f:
         base64_pdf = base64.b64encode(f.read()).decode('utf-8')
     
     pdf_display = f'''<embed src="data:application/pdf;base64,{base64_pdf}" width="700" height="800" type="application/pdf">'''   

@@ -10,9 +10,9 @@ def get_sample_coordinates(n_samples=100, get_wildfire_set=True):
     longitudes = []
 
     if get_wildfire_set:
-        dataset_root = Path("../data/raw/train/wildfire")
+        dataset_root = Path("data/raw/train/wildfire")
     else:
-        dataset_root = Path("../data/raw/train/nowildfire")
+        dataset_root = Path("data/raw/train/nowildfire")
 
     all_files = list(Path(dataset_root).rglob("*.jpg")) + \
                 list(Path(dataset_root).rglob("*.jpeg")) + \
@@ -33,9 +33,9 @@ def get_image_dict(get_wildfire_set=True):
     images = {}
 
     if get_wildfire_set:
-        dataset_root = Path("../data/raw/train/wildfire")
+        dataset_root = Path("data/raw/train/wildfire")
     else:
-        dataset_root = Path("../data/raw/train/nowildfire")
+        dataset_root = Path("data/raw/train/nowildfire")
 
     all_files = list(Path(dataset_root).rglob("*.jpg")) + \
                 list(Path(dataset_root).rglob("*.jpeg")) + \
