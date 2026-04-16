@@ -3,6 +3,7 @@ import pandas as pd
 import pydeck as pdk
 import numpy as np
 import keras
+import base64
 
 from PIL import Image
 from pathlib import Path
@@ -11,7 +12,7 @@ from coordinate_utils import get_sample_coordinates
 st.title('Wildfire Whackers')
 st.write('Team Members: Ella Chee, Willbert Clement Christianto, Khushi Khan')
 
-tab1, tab2, tab3 = st.tabs(["About Us", "Model Performance", "Interact With Data"])
+tab1, tab2, tab3, tab4 = st.tabs(["About Us", "Model Performance", "Interact With Data", "View Our Poster"])
 
 with tab1:
     st.markdown('## Goal ##')
@@ -186,3 +187,11 @@ with tab3:
                 caption=filename
             st.image(img, caption=caption, width="content")
             st.write(f"Image {i + 1}: {'Wildfire Risk' if label == 1 else 'No Wildfire'}")
+
+with tab4:
+    with open("../DS4420_poster_final.pdf", "rb") as f:
+        base64_pdf = base64.b64encode(f.read()).decode('utf-8')
+    
+    pdf_display = f'''<embed src="data:application/pdf;base64,{base64_pdf}" width="700" height="800" type="application/pdf">'''   
+
+    st.markdown(pdf_display, unsafe_allow_html=True)   
