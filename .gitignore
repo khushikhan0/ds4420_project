@@ -229,3 +229,4 @@ __marimo__/
 data/raw/*.json
 data/hf_cache/
 .idea/
+.Rproj.user
