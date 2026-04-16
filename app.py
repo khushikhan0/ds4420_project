@@ -8,6 +8,7 @@ import base64
 from PIL import Image
 from pathlib import Path
 from src.coordinate_utils import get_sample_coordinates
+from src.mlp.mlp_test import predict_image, load_model
 
 st.title('Wildfire Whackers')
 st.write('Team Members: Ella Chee, Willbert Clement Christianto, Khushi Khan')
@@ -153,8 +154,11 @@ with tab3:
     )
 
     if uploaded_files:
-        model = keras.models.load_model('src/cnn/cnn_model.keras')
+        # Load models
+        cnn_model = keras.models.load_model('src/cnn/cnn_model.keras')
+        mlp_model = load_model('src/mlp/mlp_weights.npz')
 
+        # Gather image and filename information
         images = []
         filenames = []
         for file in uploaded_files:
@@ -168,17 +172,18 @@ with tab3:
             images.append(img_array)
             filenames.append(split_file_name)
 
+        # Convert list of images to np array
         images = np.array(images)
-        preds = model.predict(images)
-        predicted_labels = (preds > 0.5).astype(int)
-        for i, (label, img, filename) in enumerate(zip(predicted_labels, images, filenames)):
-            print(
-                i,
-                np.mean(img),
-                np.std(img),
-                img.shape
-            )
 
+        # Gathering CNN model's predictions
+        cnn_preds = cnn_model.predict(images)
+        predicted_labels = (cnn_preds > 0.5).astype(int)
+
+        # Gathering MLP model's predictions
+        mlp_preds = [predict_image(image, mlp_model)["predicted_class"] for image in uploaded_files]
+
+        # Plot images and predictions from both models (CNN, MLP)
+        for i, (label, img, filename, mlp_label) in enumerate(zip(predicted_labels, images, filenames, mlp_preds)):
             split_name = filename.split(',')
 
             if len(split_name) == 2:
@@ -186,7 +191,8 @@ with tab3:
             else:
                 caption=filename
             st.image(img, caption=caption, width="content")
-            st.write(f"Image {i + 1}: {'Wildfire Risk' if label == 1 else 'No Wildfire'}")
+            st.write(f"CNN Prediction: {'Wildfire Risk' if label == 1 else 'No Wildfire'}")
+            st.write(f"MLP Prediction: {'Wildfire Risk' if mlp_label == 1 else 'No Wildfire'}")
 
 with tab4:
     with open("DS4420_poster_final.pdf", "rb") as f:
