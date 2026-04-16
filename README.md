@@ -1,15 +1,15 @@
-# DS4420 Final Project  
-## Wildfire Prediction Model
+# Wildfire Whackers: Wildfire Prediction Models
+## DS4420 Final Project  
 Team Members: Ella Chee, Willbert Clement Christianto, Khushi Khan
 
-## Overview:
+### Overview:
 We experimented with three types of deep learning approaches (multi-layer perceptron, convolutional neural network, and Bayesian machine learning) to categorize Canadian satellite images from [Kaggle](https://www.kaggle.com/datasets/abdelghaniaaba/wildfire-prediction-dataset) as at risk or not at risk of wildfire. Below is a subset of our training dataset samples:
 
 <div align="center">
   <img src="./src/website-visuals/dataset_6samples.png" width="600" height="600" alt="Description">
 </div>
 
-## Usage: 
+### Usage: 
 1. Clone and navigate to the repository.
 ```bash
 git clone https://github.com/khushikhan0/ds4420_project.git
