@@ -7,3 +7,5 @@ tensorflow
 pandas
 tensorflow_datasets
 scikeras
+streamlit
+pydeck
