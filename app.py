@@ -31,6 +31,13 @@ def get_wildfire_samples():
 def get_nowildfire_samples():
     return get_sample_coordinates(get_wildfire_set=False)
 
+@st.cache_resource
+def get_poster():
+    with open("DS4420_poster_final.pdf", "rb") as f:
+        base64_pdf = base64.b64encode(f.read()).decode('utf-8')
+    
+    return f'''<embed src="data:application/pdf;base64,{base64_pdf}" width="700" height="800" type="application/pdf">'''
+
 with tab1:
     st.markdown('## Goal ##')
     st.write('Our project aims to detect the likelihood of wildfires using satellite wildfire imagery. We\'ve sampled nine images from our training dataset\
@@ -120,7 +127,7 @@ with tab2:
     st.image('src/bayesian/brms_plot.png')
     st.image('src/bayesian/bayes_conf_matrix.png')
     st.image('src/bayesian/ppcheck.png')
-    st.write('The Bayesian logistic regression failed to meaningfully represent the distinction between satellite images of areas with and without risk of wildfire. Decreasing the image size while increasing the number of iterations had some improvement, though various combinations of hyperparameters failed to reduce the r-hat to 1.00. In the final model, there were 2540 divergent transitions after warmup, with the largest r-hat being 5.48, indicated poor mixing of chains. As shown in the plots from a sample of features below, posterior distributions fail to adequately represent the Bernoulli , and in rather than displaying random, hairy caterpillar-like chains across iterations, there seems to be little to no mixing.')
+    st.write('The Bayesian logistic regression failed to meaningfully represent the distinction between satellite images of areas with and without risk of wildfire. Decreasing the image size while increasing the number of iterations had some improvement, though various combinations of hyperparameters failed to reduce the r-hat to 1.00. In the final model, there were 2540 divergent transitions after warmup, with the largest r-hat being 7.52, indicated poor mixing of chains. As shown in the plots from a sample of features above, the posterior distribution fails to adequately mirror the Bernoulli, and rather than displaying random, hairy caterpillar-like chains across iterations, there seems to be little to no mixing of chains. Despite the poor convergence however, the model managed an overall accuracy of ~82%, and F1 score of 0.84, ranking slightly lower than the MLP.')
 
 with tab3:
     wildfire_lats, wildfire_longs = get_wildfire_samples()
@@ -210,9 +217,6 @@ with tab3:
             st.write(f"MLP Prediction: {'Wildfire Risk' if mlp_label == 1 else 'No Wildfire'}")
 
 with tab4:
-    with open("DS4420_poster_final.pdf", "rb") as f:
-        base64_pdf = base64.b64encode(f.read()).decode('utf-8')
-    
-    pdf_display = f'''<embed src="data:application/pdf;base64,{base64_pdf}" width="700" height="800" type="application/pdf">'''   
+    pdf_display = get_poster()   
 
-    st.markdown(pdf_display, unsafe_allow_html=True)   
+    st.markdown(pdf_display, unsafe_allow_html=True)
