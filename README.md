@@ -9,7 +9,7 @@ We experimented with three types of deep learning approaches (multi-layer percep
   <img src="./src/website-visuals/dataset_6samples.png" width="600" height="600" alt="Description">
 </div>
 
-Visit our website for more details:
+Visit our website for more details: https://wildfire-whackers.streamlit.app/
 
 ### Usage: 
 1. Clone and navigate to the repository.
@@ -26,7 +26,6 @@ pip install -r requirements.txt
 download_data.py
 ```
 3. Load the CNN model with the following line:
-- CNN:
 ```bash
 model = keras.models.load_model('./cnn/cnn_model.keras')
 ```
