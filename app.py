@@ -23,6 +23,14 @@ def load_cnn():
 def load_mlp():
     return load_model('src/mlp/mlp_weights.npz')
 
+@st.cache_resource
+def get_wildfire_samples():
+    return get_sample_coordinates()
+
+@st.cache_resource
+def get_nowildfire_samples():
+    return get_sample_coordinates(get_wildfire_set=False)
+
 with tab1:
     st.markdown('## Goal ##')
     st.write('Our project aims to detect the likelihood of wildfires using satellite wildfire imagery. We\'ve sampled nine images from our training dataset\
@@ -115,17 +123,16 @@ with tab2:
     st.write('The Bayesian logistic regression failed to meaningfully represent the distinction between satellite images of areas with and without risk of wildfire. Decreasing the image size while increasing the number of iterations had some improvement, though various combinations of hyperparameters failed to reduce the r-hat to 1.00. In the final model, there were 2540 divergent transitions after warmup, with the largest r-hat being 5.48, indicated poor mixing of chains. As shown in the plots from a sample of features below, posterior distributions fail to adequately represent the Bernoulli , and in rather than displaying random, hairy caterpillar-like chains across iterations, there seems to be little to no mixing.')
 
 with tab3:
-    n_samples = 5000
-    wildfire_lats, wildfire_longs = get_sample_coordinates(n_samples=n_samples)
-    nowildfire_lats, nowildfire_longs = get_sample_coordinates(n_samples=n_samples, 
-                                                               get_wildfire_set=False)
+    wildfire_lats, wildfire_longs = get_wildfire_samples()
+    nowildfire_lats, nowildfire_longs = get_nowildfire_samples()
+    n_samples = len(wildfire_lats + wildfire_longs)
 
     st.markdown(f"### {n_samples} Image Samples from the Training Dataset")
 
     data = pd.DataFrame({
         'latitude': wildfire_lats + nowildfire_lats,
         'longitude': wildfire_longs + nowildfire_longs,
-        'label': ['wildfire'] * n_samples + ['no_wildfire'] * n_samples
+        'label': ['wildfire'] * len(wildfire_lats) + ['no_wildfire'] * len(nowildfire_lats)
     })
 
     data['color'] = data['label'].map({
