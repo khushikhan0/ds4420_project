@@ -3,7 +3,6 @@ import pandas as pd
 import pydeck as pdk
 import numpy as np
 import keras
-import base64
 
 from PIL import Image
 from pathlib import Path
@@ -13,7 +12,7 @@ from src.mlp.mlp_test import predict_image, load_model
 st.title('Wildfire Whackers')
 st.write('Team Members: Ella Chee, Willbert Clement Christianto, Khushi Khan')
 
-tab1, tab2, tab3, tab4 = st.tabs(["About Us", "Model Performance", "Interact With Data", "View Our Poster"])
+tab1, tab2, tab3, tab4 = st.tabs(["About Us", "Model Performance", "Data Visualizations", "View Our Poster"])
 
 @st.cache_resource
 def load_cnn():
@@ -30,13 +29,6 @@ def get_wildfire_samples():
 @st.cache_resource
 def get_nowildfire_samples():
     return get_sample_coordinates(get_wildfire_set=False)
-
-@st.cache_resource
-def get_poster():
-    with open("DS4420_poster_final.pdf", "rb") as f:
-        base64_pdf = base64.b64encode(f.read()).decode('utf-8')
-    
-    return f'''<embed src="data:application/pdf;base64,{base64_pdf}" width="700" height="800" type="application/pdf">'''
 
 with tab1:
     st.markdown('## Goal ##')
@@ -134,7 +126,7 @@ with tab3:
     nowildfire_lats, nowildfire_longs = get_nowildfire_samples()
     n_samples = len(wildfire_lats + wildfire_longs)
 
-    st.markdown(f"### {n_samples} Image Samples from the Training Dataset")
+    st.markdown(f"### {n_samples} Image Samples from the Testing Dataset")
 
     data = pd.DataFrame({
         'latitude': wildfire_lats + nowildfire_lats,
@@ -217,6 +209,4 @@ with tab3:
             st.write(f"MLP Prediction: {'Wildfire Risk' if mlp_label == 1 else 'No Wildfire'}")
 
 with tab4:
-    pdf_display = get_poster()   
-
-    st.markdown(pdf_display, unsafe_allow_html=True)
+    st.image('src/website-visuals/poster.png')
