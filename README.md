@@ -11,7 +11,7 @@ We experimented with three types of deep learning approaches (multi-layer percep
 
 Visit our website for more details: https://wildfire-whackers.streamlit.app/
 
-### Usage: 
+### Model Usage: 
 1. Clone and navigate to the repository.
 ```bash
 git clone https://github.com/khushikhan0/ds4420_project.git
