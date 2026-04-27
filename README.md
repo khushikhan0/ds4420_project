@@ -9,7 +9,7 @@ We experimented with three types of deep learning approaches (multi-layer percep
   <img src="./src/website-visuals/dataset_6samples.png" width="600" height="600" alt="Description">
 </div>
 
-Visit our website for more details: https://wildfire-whackers.streamlit.app/
+Visit our website for more details about the model performance, data visualizations, model architecture, and our poster: https://wildfire-whackers.streamlit.app/
 
 ### Model Usage: 
 1. Clone and navigate to the repository.
